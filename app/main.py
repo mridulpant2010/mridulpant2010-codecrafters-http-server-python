@@ -36,7 +36,9 @@ def create_server_codecrafter(host, port):
         try:
             request_data=data.split("\r\n")
             print(request_data)
-            filtered_data = request_data[0].split(" ")[1].split("/echo/")[1]
+            filtered_data = request_data[0].split(" ")[1]
+            if filtered_data !='/':
+                filtered_data=filtered_data.split("/echo/")[1]
             print(filtered_data)
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
             connection.sendall(response.encode())
