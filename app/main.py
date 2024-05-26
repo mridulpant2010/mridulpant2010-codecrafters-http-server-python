@@ -22,7 +22,7 @@ def create_server(host, port):
                     break
                 
                 if req[0].split("/")!="/":
-                    response = b"HTTP/1.1 404 Not Found \r\n\r\n"
+                    response = b"HTTP/1.1 404 Not Found\r\n\r\n"
                 conn.sendall(response)
                 
 def create_server_codecrafter(host, port):
