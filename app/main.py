@@ -12,9 +12,18 @@ def create_server(host, port):
             while True:
                 data = conn.recv(1024)
                 print(data)
+                # how to get this request target from the server?
+                # how to identify if it is a valid request-line or the invalid request-line?
+                # invalid request line with 400 error or a 301
+                response = b"HTTP/1.1 200 OK\r\n\r\n"
+                # ['GET / HTTP/1.1', 'Host: localhost:4221', '', '']
+                req = data.decode().split("\r\n")
                 if not data:
                     break
-                conn.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
+                
+                if req[0].split("/")!="/":
+                    response = b"HTTP/1.1 400 Bad Request\r\n\r\n"
+                conn.sendall(response)
                 
 def create_server_codecrafter(host, port):
     with socket.create_server((host, port),reuse_port=True) as socket_server:
@@ -37,7 +46,7 @@ def main():
     #
     # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
-    create_server_codecrafter(HOST,PORT)
+    create_server(HOST,PORT)
 
 if __name__ == "__main__":
     main()
