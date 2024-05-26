@@ -31,17 +31,18 @@ def create_server_codecrafter(host, port):
         connection,address = socket_server.accept()
         print(f"accepted connection from the {address}")
         
-        data = connection.recv(1024)
+        data = connection.recv(1024).decode()
         print(data)
-        response = b"HTTP/1.1 200 OK\r\n\r\n"
         
-        request_data=data.decode().split("\r\n")
+        request_data=data.split("\r\n")
         print(request_data)
-        if request_data[0].split(" ")[1]!="/":
+        filtered_data = request_data[0].split(" ")[1].split("/echo/")[1]
+        print(filtered_data)
+        if filtered_data is None:
             response = b"HTTP/1.1 404 Not Found\r\n\r\n"
-        
-        connection.sendall(response)
-        
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        connection.sendall(response.encode())
+    
         
 
 def main():
