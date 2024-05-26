@@ -33,15 +33,18 @@ def create_server_codecrafter(host, port):
         
         data = connection.recv(1024).decode()
         print(data)
+        try:
+            request_data=data.split("\r\n")
+            print(request_data)
+            filtered_data = request_data[0].split(" ")[1].split("/echo/")[1]
+            print(filtered_data)
+            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+            connection.sendall(response.encode())
+        except IndexError:
+            response = "HTTP/1.1 404 Not Found\r\n\r\n"
+            connection.sendall(response.encode())
+
         
-        request_data=data.split("\r\n")
-        print(request_data)
-        filtered_data = request_data[0].split(" ")[1].split("/echo/")[1]
-        print(filtered_data)
-        if filtered_data is None:
-            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
-        connection.sendall(response.encode())
     
         
 
