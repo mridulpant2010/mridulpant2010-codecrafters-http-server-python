@@ -3,10 +3,10 @@ import socket
 
 
 def create_server(host, port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket:
-        socket.bind((host, port))
-        socket.listen()
-        conn, addr = socket.accept()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket_server:
+        socket_server.bind((host, port))
+        socket_server.listen()
+        conn, addr = socket_server.accept()
         with conn:
             print(f"Connected by {addr}")
             while True:
