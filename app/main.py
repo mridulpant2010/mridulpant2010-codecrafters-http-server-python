@@ -1,5 +1,6 @@
 # Uncomment this to pass the first stage
 import socket
+from urllib import request
 
 
 def create_server(host, port):
@@ -26,14 +27,20 @@ def create_server(host, port):
                 conn.sendall(response)
                 
 def create_server_codecrafter(host, port):
-    with socket.create_server((host, port),reuse_port=True) as socket_server:
+    with socket.create_server((host, port)) as socket_server:
         connection,address = socket_server.accept()
         print(f"accepted connection from the {address}")
         
         data = connection.recv(1024)
         print(data)
-        connection.sendall(b"HTTP/1.1 200 OK\r\n\r\n")
+        response = b"HTTP/1.1 200 OK\r\n\r\n"
         
+        request_data=data.decode().split("\r\n")
+        print(request_data)
+        if request_data[0].split(" ")[1]!="/":
+            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+        
+        connection.sendall(response)
         
         
 
@@ -46,7 +53,7 @@ def main():
     #
     # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
-    create_server(HOST,PORT)
+    create_server_codecrafter(HOST,PORT)
 
 if __name__ == "__main__":
     main()
