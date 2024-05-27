@@ -1,6 +1,6 @@
 # Uncomment this to pass the first stage
 import socket
-from urllib import request
+import re
 
 
 def create_server(host, port):
@@ -26,6 +26,28 @@ def create_server(host, port):
                     response = b"HTTP/1.1 404 Not Found\r\n\r\n"
                 conn.sendall(response)
                 
+def create_server_refactored(host,port):
+    #TODO: need to learn how is this happening using regular expression.
+    with socket.create_server((host, port)) as socket_server:
+        conn,addr = socket_server.accept()
+        print(f"accepted connection from the {addr}")
+        
+        data = conn.recv(1024).decode()
+        try:
+            match = re.match(r"GET\s+(/echo/)?(\S+)\s+HTTP/1\.1", data)
+            if match:
+                filtered_data = match.group(2)
+                response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+            else:
+                raise IndexError
+        except IndexError:
+            response = "HTTP/1.1 404 Not Found\r\n\r\n"
+        conn.sendall(response.encode())
+                
+            
+            
+        
+                
 def create_server_codecrafter(host, port):
     with socket.create_server((host, port)) as socket_server:
         connection,address = socket_server.accept()
@@ -34,6 +56,7 @@ def create_server_codecrafter(host, port):
         data = connection.recv(1024).decode()
         print(data)
         try:
+            # what is a better way to do the below instead of doing the split multiple times?
             request_data=data.split("\r\n")
             print(request_data)
             filtered_data = request_data[0].split(" ")[1]
@@ -41,10 +64,9 @@ def create_server_codecrafter(host, port):
                 filtered_data=filtered_data.split("/echo/")[1]
             print(filtered_data)
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
-            connection.sendall(response.encode())
         except IndexError:
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
-            connection.sendall(response.encode())
+        connection.sendall(response.encode())
 
         
     
@@ -59,7 +81,7 @@ def main():
     #
     # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
-    create_server_codecrafter(HOST,PORT)
+    create_server_refactored(HOST,PORT)
 
 if __name__ == "__main__":
     main()
