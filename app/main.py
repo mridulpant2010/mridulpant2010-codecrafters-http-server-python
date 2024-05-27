@@ -54,6 +54,19 @@ def create_server_codecrafter(host, port):
             connection_thread=threading.Thread(target=client_connection,args=(connection,))
             connection_thread.start()
 
+def read_directory_data(filtered_data):
+    file_name = filtered_data
+    directory = sys.argv[2]
+    file_path = f"{directory}/{file_name}"
+    print("File path: ", file_path)
+    # read the file contents from the directory
+    try:
+        with open(file_path,"rb") as f:
+            data = f.read()
+    except FileNotFoundError:
+        data = None
+    return data
+
 def client_connection(conn):
     data = conn.recv(1024).decode()
     print(data)
@@ -61,13 +74,21 @@ def client_connection(conn):
         request_data = data.split("\r\n")
         filtered_data = request_data[0].split(" ")[1]
         if filtered_data !='/':
+            content_type = "text/plain"
             if filtered_data == '/user-agent':
                 filtered_data=request_data[2].split(" ")[1]
+            elif filtered_data.startswith('/files'):
+                filtered_data=filtered_data[1].split("/files/")[1]
+                print(filtered_data)
+                filtered_data = read_directory_data(filtered_data)
+                content_type = "application/octet-stream"
+                if data is None:
+                    raise IndexError
             else:
                 filtered_data=filtered_data.split("/echo/")[1]
         print(filtered_data)
         #TODO: what is a better way to read the header from the text?
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
     except IndexError:
         response = "HTTP/1.1 404 Not Found\r\n\r\n"
     print(response)
