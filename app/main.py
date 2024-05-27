@@ -58,7 +58,7 @@ def create_server_codecrafter(host, port):
             filtered_data = request_data[0].split(" ")[1]
             if filtered_data !='/':
                 if filtered_data == '/user-agent':
-                    filtered_data=request_data[1].split(" ")[1]
+                    filtered_data=request_data[2].split(" ")[1]
                 else:
                     filtered_data=filtered_data.split("/echo/")[1]
             print(filtered_data)
