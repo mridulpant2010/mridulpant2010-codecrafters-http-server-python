@@ -1,5 +1,6 @@
 # Uncomment this to pass the first stage
 import socket
+import threading
 import re
 
 
@@ -43,31 +44,36 @@ def create_server_refactored(host,port):
         except IndexError:
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
         conn.sendall(response.encode())
-                
+                        
 def create_server_codecrafter(host, port):
     with socket.create_server((host, port)) as socket_server:
-        connection,address = socket_server.accept()
-        print(f"accepted connection from the {address}")
-        
-        data = connection.recv(1024).decode()
-        print(data)
-        try:
-            # what is a better way to do the below instead of doing the split multiple times?
-            request_data=data.split("\r\n")
-            print(request_data)
-            filtered_data = request_data[0].split(" ")[1]
-            if filtered_data !='/':
-                if filtered_data == '/user-agent':
-                    filtered_data=request_data[2].split(" ")[1]
-                else:
-                    filtered_data=filtered_data.split("/echo/")[1]
-            print(filtered_data)
-            #TODO: what is a better way to read the header from the text?
-            response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
-        except IndexError:
-            response = "HTTP/1.1 404 Not Found\r\n\r\n"
-        print(response)
-        connection.sendall(response.encode())
+        while True:
+            connection,address = socket_server.accept()
+            print(f"accepted connection from the {address}")
+            #client_connection(connection)
+            connection_thread=threading.Thread(target=client_connection,args=(connection,))
+            connection_thread.start()
+
+def client_connection(conn):
+    data = conn.recv(1024).decode()
+    print(data)
+    try:
+        request_data = data.split("\r\n")
+        filtered_data = request_data[0].split(" ")[1]
+        if filtered_data !='/':
+            if filtered_data == '/user-agent':
+                filtered_data=request_data[2].split(" ")[1]
+            else:
+                filtered_data=filtered_data.split("/echo/")[1]
+        print(filtered_data)
+        #TODO: what is a better way to read the header from the text?
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+    except IndexError:
+        response = "HTTP/1.1 404 Not Found\r\n\r\n"
+    print(response)
+    conn.sendall(response.encode())
+    conn.close()
+
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
