@@ -27,7 +27,7 @@ def create_server(host, port):
                 conn.sendall(response)
                 
 def create_server_refactored(host,port):
-    #TODO: need to learn how is this happening using regular expression.
+    #TODO: need to learn how is this happening using regular expression. Also, change this code to align.
     with socket.create_server((host, port)) as socket_server:
         conn,addr = socket_server.accept()
         print(f"accepted connection from the {addr}")
@@ -44,10 +44,6 @@ def create_server_refactored(host,port):
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
         conn.sendall(response.encode())
                 
-            
-            
-        
-                
 def create_server_codecrafter(host, port):
     with socket.create_server((host, port)) as socket_server:
         connection,address = socket_server.accept()
@@ -61,16 +57,17 @@ def create_server_codecrafter(host, port):
             print(request_data)
             filtered_data = request_data[0].split(" ")[1]
             if filtered_data !='/':
-                filtered_data=filtered_data.split("/echo/")[1]
+                if filtered_data == '/user-agent':
+                    filtered_data=request_data[1].split(" ")[1]
+                else:
+                    filtered_data=filtered_data.split("/echo/")[1]
             print(filtered_data)
+            #TODO: what is a better way to read the header from the text?
             response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
         except IndexError:
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
+        print(response)
         connection.sendall(response.encode())
-
-        
-    
-        
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -81,7 +78,8 @@ def main():
     #
     # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     # server_socket.accept() # wait for client
-    create_server_refactored(HOST,PORT)
+    #create_server_refactored(HOST,PORT)
+    create_server_codecrafter(HOST,PORT)
 
 if __name__ == "__main__":
     main()
