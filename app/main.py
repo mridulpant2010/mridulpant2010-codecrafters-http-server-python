@@ -74,8 +74,21 @@ def write_to_file(file_name,contents):
     try:
         with open(file_path,"w") as f:
             f.write(contents)
-    except Exception as e:
+    except FileNotFoundError as e:
         raise IndexError
+    
+def validate_encoding(filtered_data,request_data):
+    content_type = "text/plain"
+    try:
+        accept_encoding = request_data[2].split(" ")[1]
+        print(accept_encoding)
+        if accept_encoding == 'gzip':
+            response = f"HTTP/1.1 200 OK\r\nContent-Encoding: {accept_encoding}\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        else:
+            raise Exception
+    except Exception:
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+    return response    
 
 
 def get_http_process(filtered_data,request_data):
@@ -88,22 +101,29 @@ def get_http_process(filtered_data,request_data):
         content_type = "application/octet-stream"
         if filtered_data is None:
             raise IndexError
-    else:
+    elif filtered_data.startswith('/echo'):
         filtered_data=filtered_data.split("/echo/")[1]
+        #fetch the accept_encoding value
+        response= validate_encoding(filtered_data,request_data)
+        print("response is ",response)
+        return response
+    else:
+        raise IndexError
+                
     response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
     return response
     
 
 def client_connection(conn):
-    data = conn.recv(1024).decode()
+    data = conn.recv(1024).decode() #TODO: how can i convert this data to a hashmap? is it even possible?
     print("data is",data)
     try:
         request_data = data.split("\r\n")
         filtered_data = request_data[0].split(" ")[1]
-        content_type = "text/plain"
         http_verb = request_data[0].split(" ")[0]
         print("http_verb is: ",http_verb)
         if http_verb =='GET':
+            content_type = "text/plain"
             if filtered_data !='/':
                 response = get_http_process(filtered_data,request_data)
             else:
@@ -117,11 +137,9 @@ def client_connection(conn):
                 print("body is:",body)
                 #how to get the content body from the curl request
                 write_to_file(filename,body)
-                
             response = f"HTTP/1.1 201 Created\r\n\r\n"
         print(filtered_data)
         #TODO: what is a better way to read the header from the text?
-        
     except IndexError:
         response = "HTTP/1.1 404 Not Found\r\n\r\n"
     print(response)
