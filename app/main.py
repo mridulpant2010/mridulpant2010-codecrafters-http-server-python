@@ -80,10 +80,11 @@ def write_to_file(file_name,contents):
 def validate_encoding(filtered_data,request_data):
     content_type = "text/plain"
     try:
-        accept_encoding = request_data[2].split(" ")[1]
-        print(accept_encoding)
-        if accept_encoding == 'gzip':
-            response = f"HTTP/1.1 200 OK\r\nContent-Encoding: {accept_encoding}\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        accept_encoding = request_data[2].split(" ")[1:]
+        #accept_encoding.map(lambda x: x.replace(',',''))
+        print("accept encoding",accept_encoding)
+        if  'gzip,' in accept_encoding or 'gzip' in accept_encoding:
+            response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
         else:
             raise Exception
     except Exception:
