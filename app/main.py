@@ -66,27 +66,62 @@ def read_directory_data(filtered_data):
         data = None
     return data
 
+def write_to_file(file_name,contents):
+    # the idea is to read the data from the post request and write it to a file.
+    directory = sys.argv[2]
+    file_path = f"{directory}{file_name}"
+    print(file_path)
+    try:
+        with open(file_path,"w") as f:
+            f.write(contents)
+    except Exception as e:
+        raise IndexError
+
+
+def get_http_process(filtered_data,request_data):
+    content_type= "text/plain"
+    if filtered_data == '/user-agent':
+        filtered_data=request_data[2].split(" ")[1]
+    elif filtered_data.startswith('/files'):
+        filtered_data=filtered_data.split("/files/")[1]
+        filtered_data = read_directory_data(filtered_data)
+        content_type = "application/octet-stream"
+        if filtered_data is None:
+            raise IndexError
+    else:
+        filtered_data=filtered_data.split("/echo/")[1]
+    response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+    return response
+    
+
 def client_connection(conn):
     data = conn.recv(1024).decode()
-    print(data)
+    print("data is",data)
     try:
         request_data = data.split("\r\n")
         filtered_data = request_data[0].split(" ")[1]
         content_type = "text/plain"
-        if filtered_data !='/':
-            if filtered_data == '/user-agent':
-                filtered_data=request_data[2].split(" ")[1]
-            elif filtered_data.startswith('/files'):
-                filtered_data=filtered_data.split("/files/")[1]
-                filtered_data = read_directory_data(filtered_data)
-                content_type = "application/octet-stream"
-                if filtered_data is None:
-                    raise IndexError
+        http_verb = request_data[0].split(" ")[0]
+        print("http_verb is: ",http_verb)
+        if http_verb =='GET':
+            if filtered_data !='/':
+                response = get_http_process(filtered_data,request_data)
             else:
-                filtered_data=filtered_data.split("/echo/")[1]
+                response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        elif http_verb == "POST":
+            # read the data from the server post request
+            if filtered_data.startswith('/files'):
+                filename = filtered_data.split("/files/")[1]
+                print(filename)
+                body = data.split("\r\n")[-1]
+                print("body is:",body)
+                #how to get the content body from the curl request
+                write_to_file(filename,body)
+                
+            response = f"HTTP/1.1 201 Created\r\n\r\n"
         print(filtered_data)
         #TODO: what is a better way to read the header from the text?
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        
     except IndexError:
         response = "HTTP/1.1 404 Not Found\r\n\r\n"
     print(response)
