@@ -2,6 +2,7 @@
 import socket
 import threading
 import re
+import sys
 
 
 def create_server(host, port):
@@ -55,13 +56,11 @@ def create_server_codecrafter(host, port):
             connection_thread.start()
 
 def read_directory_data(filtered_data):
-    file_name = filtered_data
     directory = sys.argv[2]
-    file_path = f"{directory}/{file_name}"
-    print("File path: ", file_path)
+    file_path = f"{directory}{filtered_data}"
     # read the file contents from the directory
     try:
-        with open(file_path,"rb") as f:
+        with open(file_path,"r") as f:
             data = f.read()
     except FileNotFoundError:
         data = None
@@ -73,16 +72,15 @@ def client_connection(conn):
     try:
         request_data = data.split("\r\n")
         filtered_data = request_data[0].split(" ")[1]
+        content_type = "text/plain"
         if filtered_data !='/':
-            content_type = "text/plain"
             if filtered_data == '/user-agent':
                 filtered_data=request_data[2].split(" ")[1]
             elif filtered_data.startswith('/files'):
-                filtered_data=filtered_data[1].split("/files/")[1]
-                print(filtered_data)
+                filtered_data=filtered_data.split("/files/")[1]
                 filtered_data = read_directory_data(filtered_data)
                 content_type = "application/octet-stream"
-                if data is None:
+                if filtered_data is None:
                     raise IndexError
             else:
                 filtered_data=filtered_data.split("/echo/")[1]
