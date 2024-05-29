@@ -1,7 +1,6 @@
 # Uncomment this to pass the first stage
 import socket
 import threading
-import re
 import sys
 import gzip
 
