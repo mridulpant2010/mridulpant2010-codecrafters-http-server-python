@@ -3,7 +3,8 @@ import socket
 import threading
 import re
 import sys
-
+import gzip
+import codecs
 
 def create_server(host, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket_server:
@@ -77,19 +78,25 @@ def write_to_file(file_name,contents):
     except FileNotFoundError as e:
         raise IndexError
     
+    
 def validate_encoding(filtered_data,request_data):
     content_type = "text/plain"
     try:
-        accept_encoding = request_data[2].split(" ")[1:]
+        accept_encoding = request_data[2].split(" ")
         #accept_encoding.map(lambda x: x.replace(',',''))
         print("accept encoding",accept_encoding)
-        if  'gzip,' in accept_encoding or 'gzip' in accept_encoding:
-            response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        #print(type(accept_encoding))
+        if  'gzip' in accept_encoding:
+            print("gzip ")
+            compress_filtered_data=gzip.compress(filtered_data.encode())
+            hex_data = compress_filtered_data.hex()#codecs.encode(compress_filtered_data,'hex_codec')
+            response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: {content_type}\r\nContent-Length: {len(hex_data)}\r\n\r\n{hex_data}"
         else:
             raise Exception
     except Exception:
         response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
-    return response    
+    print(response)
+    return response
 
 
 def get_http_process(filtered_data,request_data):
@@ -149,15 +156,9 @@ def client_connection(conn):
 
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
     HOST = "localhost"
     PORT = 4221
-    # Uncomment this to pass the first stage
-    #
-    # server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-    # server_socket.accept() # wait for client
-    #create_server_refactored(HOST,PORT)
     create_server_codecrafter(HOST,PORT)
 
 if __name__ == "__main__":
