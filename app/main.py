@@ -45,15 +45,19 @@ def validate_encoding(filtered_data, request_data):
     accept_encoding = request_data[2].split(" ")
     print("accept encoding", accept_encoding)
     # print(type(accept_encoding))
-    if "gzip" in accept_encoding:
+    if "gzip" in accept_encoding or "gzip," in accept_encoding:
         print("gzip ")
-        compress_filtered_data = gzip.compress(filtered_data.encode())
-        hex_data = (
-            compress_filtered_data.hex()
-        )  # codecs.encode(compress_filtered_data,'hex_codec')
-        response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: {len(hex_data)}\r\n\r\n{hex_data}"
+        compress_filtered_data = gzip.compress(filtered_data.encode("utf-8"))
+        # hex_data = (
+        #     compress_filtered_data.hex()
+        # )  # codecs.encode(compress_filtered_data,'hex_codec')
+        response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: {len(compress_filtered_data)}\r\n\r\n".encode()+compress_filtered_data
+        print("compressed data ",compress_filtered_data)
+        # uncompressed_data = bytes.fromhex(hex_data)
+        # decompressed_data = gzip.decompress(compress_filtered_data)
+        # print("decompressed data ",decompressed_data.decode())
     else:
-        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+        response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}".encode()
     print(response)
     return response
 
@@ -77,7 +81,7 @@ def get_http_process(filtered_data, request_data):
     else:
         raise IndexError
 
-    response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+    response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}".encode()
     return response
 
 
@@ -96,7 +100,7 @@ def client_connection(conn):
             if filtered_data != "/":
                 response = get_http_process(filtered_data, request_data)
             else:
-                response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}"
+                response = f"HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {len(filtered_data)}\r\n\r\n{filtered_data}".encode()
         elif http_verb == "POST":
             # read the data from the server post request
             if filtered_data.startswith("/files"):
@@ -106,13 +110,13 @@ def client_connection(conn):
                 print("body is:", body)
                 # how to get the content body from the curl request
                 write_to_file(filename, body)
-            response = f"HTTP/1.1 201 Created\r\n\r\n"
+            response = f"HTTP/1.1 201 Created\r\n\r\n".encode()
         print(filtered_data)
         # TODO: what is a better way to read the header from the text?
     except IndexError:
-        response = "HTTP/1.1 404 Not Found\r\n\r\n"
+        response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
     print(response)
-    conn.sendall(response.encode())
+    conn.sendall(response)
     conn.close()
 
 
