@@ -48,11 +48,11 @@ def validate_encoding(filtered_data, request_data):
     if "gzip" in accept_encoding or "gzip," in accept_encoding:
         print("gzip ")
         compress_filtered_data = gzip.compress(filtered_data.encode("utf-8"))
-        # hex_data = (
-        #     compress_filtered_data.hex()
-        # )  # codecs.encode(compress_filtered_data,'hex_codec')
-        response = f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: {len(compress_filtered_data)}\r\n\r\n".encode()+compress_filtered_data
-        print("compressed data ",compress_filtered_data)
+        response = (
+            f"HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: {len(compress_filtered_data)}\r\n\r\n".encode()
+            + compress_filtered_data
+        )
+        print("compressed data ", compress_filtered_data)
         # uncompressed_data = bytes.fromhex(hex_data)
         # decompressed_data = gzip.decompress(compress_filtered_data)
         # print("decompressed data ",decompressed_data.decode())
